@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Real-Time Notifications</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+</head>
+
+<body>
+    <h1>Real-Time Notifications</h1>
+    <div id="notifications"></div>
+    <input type="text" id="message" placeholder="Enter your message">
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        let stompClient = null;
+
+        function connect() {
+            const sockUrl = 'http://127.0.0.1:8090/ws'; // cohérent avec l’origine de la page
+            const socket = new SockJS(sockUrl);
+            stompClient = Stomp.over(socket);
+
+            stompClient.connect({}, function(frame) {
+                console.log('Connecté : ' + frame);
+                stompClient.subscribe('/cartes/notifications', function(message) {
+                    showNotification(message.body);
+                });
+            }, function(error) {
+                console.error('Erreur WebSocket : ' + error);
+            });
+        }
+
+        function sendMessage() {
+            const message = document.getElementById('message').value;
+            if (stompClient && stompClient.connected) {
+                stompClient.send('/app/sendMessage', {}, message);
+                console.log('Message envoyé :', message);
+            } else {
+                console.error('La connexion WebSocket n’est pas établie.');
+            }
+        }
+
+        function showNotification(text) {
+            const box = document.getElementById('notifications');
+            const div = document.createElement('div');
+            div.textContent = text;
+            box.prepend(div);
+        }
+
+        connect();
+    </script>
+
+</body>
+
+</html>

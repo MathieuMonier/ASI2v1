@@ -31,7 +31,7 @@ const GamePage = () => {
 
   const fetchUserCards = async (userId) => {
     try {
-      const response = await fetch(`http://store-service:8083/user/${userId}`);
+      const response = await fetch(`/store/user/${userId}`);
       const userData = await response.json();
 
       if (!userData.cardList || userData.cardList.length === 0) {
@@ -40,7 +40,7 @@ const GamePage = () => {
       }
 
       const cardPromises = userData.cardList.map(cardId =>
-        fetch(`http://store-service:8083/card/${cardId}`).then(res => res.json())
+          fetch(`/store/card/${cardId}`).then(res => res.json())
       );
 
       const cards = await Promise.all(cardPromises);

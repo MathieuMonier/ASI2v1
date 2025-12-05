@@ -54,10 +54,10 @@ public class ActiveMqConfig {
         factory.setConnectionFactory(connectionFactory);
         factory.setPubSubDomain(false); // false = Queue, true = Topic
 
-        // 🧠 Évite les crashs en cas d'erreur dans le listener
+        // Évite les crashs en cas d'erreur dans le listener
         factory.setErrorHandler(t -> System.err.println("⚠️ Erreur JMS : " + t.getMessage()));
 
-        // ⚙️ (Optionnel) Concurrence si plusieurs threads doivent consommer la queue
+        // (Optionnel) Concurrence si plusieurs threads doivent consommer la queue
         factory.setConcurrency("1-3");
 
         return factory;

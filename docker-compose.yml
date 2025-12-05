@@ -14,7 +14,7 @@ services:
     image: nginx:latest
     container_name: reverse-proxy
     ports:
-      - "80:80"
+      - "8080:80"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
@@ -124,7 +124,7 @@ services:
               count: all
               capabilities: [ gpu ]
 
-  # ===== OLLAMA (GPU) =====
+    # ===== OLLAMA (GPU) =====
   ollama:
     image: ollama/ollama
     container_name: ollama
@@ -144,6 +144,33 @@ services:
             - driver: nvidia
               count: all
               capabilities: [ gpu ]
+
+
+  # ===== OLLAMA MODEL LOADER =====
+  ollama-loader:
+    image: curlimages/curl:latest
+    container_name: ollama-loader
+    depends_on:
+      - ollama
+    networks:
+      - app-network
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo '⏳ Attente du démarrage d Ollama...'
+        until curl -s http://ollama:11434/api/tags > /dev/null 2>&1; do
+          echo 'Ollama pas encore prêt, attente de 5 secondes...'
+          sleep 5
+        done
+        echo '✅ Ollama est prêt!'
+        echo '📥 Téléchargement du modèle qwen2:0.5b via API...'
+        curl -X POST http://ollama:11434/api/pull -d '{"name": "qwen2:0.5b"}' &
+        PULL_PID=$!
+        echo "Pull en cours (PID: $PULL_PID)..."
+        wait $PULL_PID
+        echo '✅ Modèle chargé avec succès!'
+    restart: "no"
+
 
 networks:
   app-network:

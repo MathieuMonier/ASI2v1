@@ -14,6 +14,7 @@ class GameSocketService {
     }
 
     this.socket = io(GAME_SOCKET_URL, {
+      path: '/game/socket.io',
       transports: ['websocket'],
       reconnection: true,
       reconnectionDelay: 1000,

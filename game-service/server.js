@@ -3,24 +3,28 @@ const http = require('http');
 const socketIO = require('socket.io');
 const cors = require('cors');
 
+// Import des services
 const matchmaking = require('./services/matchmaking');
 const game = require('./services/game');
 
 const app = express();
-app.use(cors());
+app.use(cors()); // Middleware CORS Express
 
 const server = http.createServer(app);
+
+// --- CONFIGURATION SOCKET.IO CORRIGÉE ---
 const io = socketIO(server, {
   cors: {
-    origin: "http://localhost", // React frontend via Nginx reverse proxy
+    origin: "*", // On autorise tout (Nginx, localhost, etc.)
     methods: ["GET", "POST"]
   },
-  path: "/game/socket.io" // important: Socket.IO sera servi sous /game/socket.io
+
+  path: "/game/socket.io"
 });
 
 const PORT = 3001;
 
-// Socket.io connection
+// Gestion des connexions Socket.io
 io.on('connection', (socket) => {
   console.log(`✅ New player connected: ${socket.id}`);
 
@@ -47,11 +51,13 @@ io.on('connection', (socket) => {
 
       console.log(`Game created: ${gameId}`);
 
-      // Send initial game state
+      // Send initial game state after a short delay
       setTimeout(() => {
         const gameState = game.getGameState(gameId);
-        io.to(match.player1.socketId).emit('gameStart', gameState);
-        io.to(match.player2.socketId).emit('gameStart', gameState);
+        if (gameState) {
+          io.to(match.player1.socketId).emit('gameStart', gameState);
+          io.to(match.player2.socketId).emit('gameStart', gameState);
+        }
       }, 1000);
     } else {
       socket.emit('waiting', { message: 'Waiting for opponent...' });
@@ -110,5 +116,5 @@ io.on('connection', (socket) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Game Service running on port ${PORT}`);
+  console.log(`✅ Game Service running on port ${PORT}`);
 });
